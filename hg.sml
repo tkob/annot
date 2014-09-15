@@ -3,7 +3,11 @@
 structure Hg :> HG = struct
   type greeting = { capabilities : string list, encoding : string }
 
-  type session = BinIO.instream * BinIO.outstream * greeting
+  type session = {
+    instream : BinIO.instream,
+    outstream : BinIO.outstream,
+    greeting : greeting,
+    repo : string }
 
   datatype datum = Input of int 
                  | Line of int 
@@ -167,20 +171,26 @@ structure Hg :> HG = struct
     "capabilities: " ^ String.concatWith " " capabilities ^ "\n" ^
     "encoding: " ^ encoding ^ "\n"
 
-  fun openSession () : session =
+  fun openSession repo : session =
   let
     val c2p = Posix.IO.pipe ()
     val p2c = Posix.IO.pipe ()
   in
     case Posix.Process.fork () of
-         NONE => (* child *) (
-           Posix.IO.dup2 {old = #outfd c2p, new = Posix.FileSys.stdout};
-           Posix.IO.dup2 {old = #infd p2c, new = Posix.FileSys.stdin};
-           Posix.IO.close (#infd c2p);
-           Posix.IO.close (#outfd p2c);
-           Posix.Process.execp ("env",
-             ["env", "HGPLAIN=1", "hg", "serve", "--cmdserver", "pipe"])
-           )
+         NONE => (* child *)
+           let
+             val args =
+               ["env", "HGPLAIN=1",
+                "hg", "serve",
+                "--cmdserver", "pipe",
+                "-R", repo]
+           in
+             Posix.IO.dup2 {old = #outfd c2p, new = Posix.FileSys.stdout};
+             Posix.IO.dup2 {old = #infd p2c, new = Posix.FileSys.stdin};
+             Posix.IO.close (#infd c2p);
+             Posix.IO.close (#outfd p2c);
+             Posix.Process.execp ("env", args)
+           end
        | SOME pid => (* parent *)
            let
              val ins = mkInstream (#infd c2p)
@@ -189,29 +199,34 @@ structure Hg :> HG = struct
            in
              Posix.IO.close (#infd p2c);
              Posix.IO.close (#outfd c2p);
-             (ins, outs, greeting)
+             { instream = ins,
+               outstream = outs,
+               greeting = greeting,
+               repo = repo }
            end
   end
 
-  fun closeSession (ins, outs, _) = (
+  fun closeSession ({instream = ins, outstream = outs, ...} : session) = (
     BinIO.closeIn ins;
     BinIO.closeOut outs)
 
-  fun getEncoding (ins, outs, greeting) = (
+  fun getRepo (session : session) = #repo session
+
+  fun getEncoding ({instream = ins, outstream = outs, ...} : session) = (
     writeChannel' (outs, "getencoding", Word8Vector.fromList []);
     case readChannel' ins of
          Result bytes => Byte.bytesToString bytes
        | _ => raise Fail ("unexpected output from server")
     )
 
-  fun runCommand (ins, outs, greeting) args =
+  fun runCommand ({instream = ins, outstream = outs, ...} : session) args =
   let
     val payload = Byte.stringToBytes (String.concatWith "\000" args)
   in
     writeChannel' (outs, "runcommand", payload)
   end
 
-  fun annotate (session as (ins, outs, greeting)) args = 
+  fun annotate (session : session as {instream = ins, outstream = outs, ...}) args = 
   let
     (*
        Output of annotate is something like the following.
