@@ -23,6 +23,14 @@ structure Hg :> HG = struct
     lineNumber : int,
     text : string }
 
+  type changeset = {
+    number : int,
+    hash : string,
+    tag : string,
+    user : string,
+    date : Date.date,
+    summary : string }
+
   fun mkInstream fd =
   let
     val reader = Posix.IO.mkBinReader
@@ -131,9 +139,7 @@ structure Hg :> HG = struct
     fun splitKV line =
     let
       val (prefix, remainder) = split #":" line
-      val value = if Substring.sub (remainder, 0) = #" "
-                  then (Substring.triml 1 remainder)
-                  else remainder
+      val value = trimWS remainder
     in
       (prefix, Substring.string value)
     end
@@ -263,6 +269,46 @@ structure Hg :> HG = struct
              else
                raise
                  Fail ("annotate failed with return code " ^ Int.toString ret)
+           end
+       | _ => raise Fail "unexpected output from server"
+  end
+
+  fun tip (session as (ins, outs, greeting)) =
+  let
+    val () = runCommand session ["tip"]
+    fun f (bytes, chunk) =
+    let
+      val kvs = parseChunk bytes
+    in
+      kvs @ chunk
+    end
+    val (datum, chunk) = foldChannel' f [] ins
+  in
+    case datum of
+         Result bytes =>
+           let val ret = scan bytes in
+             if ret = 0 then
+               let
+                 val changeset = lookupChunk ("changeset", chunk)
+                 val (prefix, remainder) = split #":" (Substring.full changeset)
+                 val number = (Option.valOf o Int.fromString) prefix
+                 val hash = Substring.string remainder
+                 val tag = lookupChunk ("tag", chunk)
+                 val user = lookupChunk ("user", chunk)
+                 val date =
+                   (Option.valOf o Date.fromString o lookupChunk) ("date", chunk)
+                 val summary = lookupChunk ("summary", chunk)
+               in
+                 { number = number,
+                   hash = hash,
+                   tag = tag,
+                   user = user,
+                   date = date,
+                   summary = summary }
+               end
+             else
+               raise
+                 Fail ("tip failed with return code " ^ Int.toString ret)
            end
        | _ => raise Fail "unexpected output from server"
   end
