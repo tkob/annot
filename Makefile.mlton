@@ -1,0 +1,8 @@
+all: annot
+annot: hg-sig.sml hg.sml annot.sml boot.sml 
+	mlton \
+	-output 'annot' \
+	-default-ann 'allowFFI true' \
+	annot.mlb 
+clean:
+	rm -f annot
