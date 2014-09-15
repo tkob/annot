@@ -16,3 +16,5 @@ let
 in
   locateAnnot (OS.FileSys.getDir ())
 end
+
+fun main () = ()
