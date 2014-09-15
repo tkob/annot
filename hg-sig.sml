@@ -9,8 +9,9 @@ signature HG = sig
     lineNumber : int,
     text : string }
 
-  val openSession : unit -> session
+  val openSession : string -> session
   val closeSession : session -> unit
+  val getRepo : session -> string
   val getEncoding : session -> string
   val annotate : session -> string list -> blame list
 end
