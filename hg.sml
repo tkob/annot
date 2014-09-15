@@ -288,7 +288,7 @@ structure Hg :> HG = struct
        | _ => raise Fail "unexpected output from server"
   end
 
-  fun tip (session as (ins, outs, greeting)) =
+  fun tip (session : session as {instream = ins, ...}) =
   let
     val () = runCommand session ["tip"]
     fun f (bytes, chunk) =
