@@ -1,5 +1,7 @@
 $(SML_LIB)/basis/basis.mlb
 hg-sig.sml
 hg.sml
+getopt-sig.sml
+getopt.sml
 annot.sml
 boot.sml
