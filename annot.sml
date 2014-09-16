@@ -40,7 +40,7 @@ let
   fun f (value, acc) =
     case value of
          GetOpt.Str(#"R", repo) => SOME repo 
-       | _ => raise Fail "unexpeected error"
+       | _ => raise Fail "unexpected error"
   val (repo, args) = GetOpt.getopt opts f NONE (CommandLine.arguments ())
 in
   case args of
