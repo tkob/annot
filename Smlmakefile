@@ -1,1 +1,2 @@
 make annot from hg-sig.sml hg.sml annot.sml boot.sml
+make getopt-test from getopt-sig.sml getopt.sml getopt-test.sml boot.sml

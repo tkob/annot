@@ -1,8 +1,14 @@
-all: annot
+all: annot getopt-test
 annot: hg-sig.sml hg.sml annot.sml boot.sml 
 	mlton \
 	-output 'annot' \
 	-default-ann 'allowFFI true' \
 	annot.mlb 
+getopt-test: getopt-sig.sml getopt.sml getopt-test.sml boot.sml 
+	mlton \
+	-output 'getopt-test' \
+	-default-ann 'allowFFI true' \
+	getopt-test.mlb 
 clean:
 	rm -f annot
+	rm -f getopt-test
