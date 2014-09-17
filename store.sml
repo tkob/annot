@@ -14,9 +14,14 @@ structure Store :> STORE = struct
   end
 
   fun openStore rootDir =
+  let
+    val rootDir =
+      OS.Path.mkAbsolute {path = rootDir, relativeTo = OS.FileSys.getDir ()}
+  in
     case getStoreDir rootDir of
          NONE => raise Fail (rootDir ^ " is not annot project dir")
        | SOME storeDir => (rootDir, storeDir)
+  end
 
   fun locateStore dir =
   let
@@ -28,9 +33,10 @@ structure Store :> STORE = struct
              SOME storeDir => SOME (dir, storeDir) 
            | NONE =>
                locateAnnot
-               (OS.Path.mkAbsolute {path=OS.Path.parentArc, relativeTo=dir})
+               (OS.Path.mkAbsolute {path = OS.Path.parentArc, relativeTo = dir})
   in
-    locateAnnot dir
+    locateAnnot
+      (OS.Path.mkAbsolute {path = dir, relativeTo = OS.FileSys.getDir ()})
   end
 
   fun rootDirOf (root, _) = root
