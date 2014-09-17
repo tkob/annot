@@ -28,8 +28,35 @@ structure Store :> STORE = struct
            else NONE
   end
 
-  fun openStore dir = raise Fail "unimplemented"
-  fun locateStore dir = raise Fail "unimplemented"
+  fun getStoreDir dir =
+  let
+    val storeDir = OS.Path.concat (dir, ".annot")
+  in
+    if OS.FileSys.isDir storeDir handle SysErr => false then
+      SOME storeDir
+    else
+      NONE
+  end
+
+  fun openStore rootDir =
+    case getStoreDir rootDir of
+         NONE => raise Fail (rootDir ^ " is not annot project dir")
+       | SOME storeDir => (rootDir, storeDir)
+
+  fun locateStore dir =
+  let
+    fun locateAnnot dir =
+      if OS.Path.isRoot dir then
+        NONE
+      else
+        case getStoreDir dir of
+             SOME storeDir => SOME (dir, storeDir) 
+           | NONE =>
+               locateAnnot
+               (OS.Path.mkAbsolute {path=OS.Path.parentArc, relativeTo=dir})
+  in
+    locateAnnot dir
+  end
 
   fun rootDirOf (root, _) = root
   fun storeDirOf (_, store) = store
