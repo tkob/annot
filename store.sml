@@ -1,0 +1,64 @@
+structure Store :> STORE = struct
+  type store = string * string (* absolute path of root and .annot dir *)
+  type path = string (* path to file relative to root *)
+  type hash = string
+
+  fun openStore dir = raise Fail "unimplemented"
+  fun locateStore dir = raise Fail "unimplemented"
+
+  fun rootDirOf (root, _) = root
+  fun storeDirOf (_, store) = store
+
+  fun stringToPath store osPath =
+  let
+    val pwd = OS.FileSys.getDir ()
+    val abs = OS.Path.mkAbsolute {path = osPath, relativeTo = pwd}
+    val rel = OS.Path.mkRelative {path = abs, relativeTo = rootDirOf store}
+    val {arcs = arcs, ...} = OS.Path.fromString rel
+  in
+    if List.exists (fn arc => arc = OS.Path.parentArc) arcs then
+      raise Fail (osPath ^ "is not a project file")
+    else rel
+  end
+
+  fun get store path lineNumber hash =
+  let
+    val storeDir = storeDirOf store
+    val line = Int.toString lineNumber
+    val messageFile =
+      List.foldr OS.Path.concat "" [storeDir, path, ".annot", line, hash]
+    val ins = TextIO.openIn messageFile
+  in
+    TextIO.inputAll ins before TextIO.closeIn ins
+  end
+
+  fun put store path lineNumber hash message =
+  let
+    val storeDir = storeDirOf store
+    val line = Int.toString lineNumber
+    val messageFile =
+      List.foldr OS.Path.concat "" [storeDir, path, ".annot", line, hash]
+    val {dir = dir, file = file} = OS.Path.splitDirFile messageFile
+    val {arcs = arcs, ...} = OS.Path.fromString dir
+    fun exists path = OS.FileSys.access (path, [])
+    fun mkdirs (parent, []) = ()
+      | mkdirs (parent, arc::arcs) =
+        let val path = OS.Path.concat (parent, arc) in
+          if exists path then
+            if OS.FileSys.isDir path then
+              mkdirs (path, arcs)
+            else
+              raise Fail ""
+          else
+            (OS.FileSys.mkDir path; mkdirs (path, arcs))
+        end
+  in
+    mkdirs (storeDir, arcs);
+    let
+      val outs = TextIO.openOut messageFile
+    in
+      TextIO.output (outs, message);
+      TextIO.closeOut outs
+    end
+  end
+end

@@ -1,6 +1,8 @@
 $(SML_LIB)/basis/basis.mlb
 hg-sig.sml
 hg.sml
+store-sig.sml
+store.sml
 getopt-sig.sml
 getopt.sml
 annot.sml
