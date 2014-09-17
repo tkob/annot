@@ -58,9 +58,9 @@ structure Store :> STORE = struct
   let
     val storeDir = storeDirOf store
     val line = Int.toString lineNumber
-    val messageFile =
-      List.foldr OS.Path.concat "" [storeDir, path, ".annot", line, hash]
-    val ins = TextIO.openIn messageFile
+    val messageFileAbs =
+      List.foldr OS.Path.concat "" [storeDir, "tree", path, ".annot", line, hash]
+    val ins = TextIO.openIn messageFileAbs
   in
     TextIO.inputAll ins before TextIO.closeIn ins
   end
@@ -69,9 +69,10 @@ structure Store :> STORE = struct
   let
     val storeDir = storeDirOf store
     val line = Int.toString lineNumber
-    val messageFile =
-      List.foldr OS.Path.concat "" [storeDir, path, ".annot", line, hash]
-    val {dir = dir, file = file} = OS.Path.splitDirFile messageFile
+    val messageFileRel = (* path to message file relative to store dir *)
+      List.foldr OS.Path.concat "" ["tree", path, ".annot", line, hash]
+    val messageFileAbs = OS.Path.concat (storeDir, messageFileRel)
+    val {dir = dir, ...} = OS.Path.splitDirFile messageFileRel
     val {arcs = arcs, ...} = OS.Path.fromString dir
     fun exists path = OS.FileSys.access (path, [])
     fun mkdirs (parent, []) = ()
@@ -88,7 +89,7 @@ structure Store :> STORE = struct
   in
     mkdirs (storeDir, arcs);
     let
-      val outs = TextIO.openOut messageFile
+      val outs = TextIO.openOut messageFileAbs
     in
       TextIO.output (outs, message);
       TextIO.closeOut outs
