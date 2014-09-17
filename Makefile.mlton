@@ -1,5 +1,5 @@
 all: annot getopt-test
-annot: hg-sig.sml hg.sml store-sig.sml store.sml getopt-sig.sml getopt.sml annot.sml boot.sml 
+annot: hg-sig.sml hg.sml store-sig.sml store.sml clerk.sml getopt-sig.sml getopt.sml annot.sml boot.sml 
 	mlton \
 	-output 'annot' \
 	-default-ann 'allowFFI true' \

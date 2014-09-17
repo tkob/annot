@@ -1,6 +1,7 @@
 make annot from \
     hg-sig.sml hg.sml \
     store-sig.sml store.sml \
+    clerk.sml \
     getopt-sig.sml getopt.sml \
     annot.sml \
     boot.sml
