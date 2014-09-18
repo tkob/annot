@@ -4,11 +4,13 @@ structure Clerk = struct
 
   datatype object = O of {
     store : Store.store,
-    getBlame : object -> string -> int -> blame
+    getBlame : object -> string -> int -> blame,
+    getCurrentHash : object -> string
   }
 
   fun getStore (O record) = #store record
   fun getBlame (obj as (O record)) = #getBlame record obj
+  fun getCurrentHash (obj as (O record)) = #getCurrentHash record obj
   
   fun get obj osPath lineNumber =
   let
@@ -31,20 +33,13 @@ structure Clerk = struct
     in
       (#file blame, #lineNumber blame, #changeset blame)
     end
+    fun getCurrentHash (O record) =
+    let
+      val { hash = hash, ... } = Hg.tip session
+    in
+      hash
+    end
   in
-    O { store = store, getBlame = getBlame }
+    O { store = store, getBlame = getBlame, getCurrentHash = getCurrentHash }
   end
 end
-
-(*
-fun test () = 
-let
-  val obj = Clerk.hg "test/fixture/repo1"
-  val message = Clerk.get obj "test/fixture/repo1/a.txt" 1
-in
-  print message;
-  print "\n"
-end
-  
-val _ = test ()
-*)
