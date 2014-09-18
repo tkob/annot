@@ -3,6 +3,6 @@ signature CLERK = sig
   type object
 
   val new : vcs -> string -> object
-  val get : object -> string -> int -> string
+  val get : object -> string -> int -> string option
   val put : object -> string -> int -> string -> unit
 end

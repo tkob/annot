@@ -7,6 +7,6 @@ signature STORE = sig
 
   val stringToPath : store -> string -> path
 
-  val get : store -> path -> int -> string -> string
+  val get : store -> path -> int -> string -> string option
   val put : store -> path -> int -> string -> string -> unit
 end

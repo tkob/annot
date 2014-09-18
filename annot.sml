@@ -36,7 +36,9 @@ in
              val line = Option.valOf (Int.fromString line)
              val obj = Clerk.new Clerk.Hg (Option.getOpt (repo, "."))
            in
-             print (Clerk.get obj file line)
+             case Clerk.get obj file line of
+                  NONE => OS.Process.exit OS.Process.failure
+                | SOME message => print message
            end
      | "put"::args => raise Fail "put unimplemented"
      | subcmd::args => raise Fail ("unknown command " ^ subcmd)
