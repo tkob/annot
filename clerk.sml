@@ -22,6 +22,15 @@ structure Clerk = struct
     message
   end
 
+  fun put obj osPath lineNumber message =
+  let
+    val hash = getCurrentHash obj
+    val store = getStore obj
+    val storePath = Store.stringToPath store osPath
+  in
+    Store.put store storePath lineNumber hash message
+  end
+
   fun hg repo =
   let
     val store = Store.openStore repo
