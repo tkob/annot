@@ -1,4 +1,4 @@
-structure Clerk = struct 
+structure Clerk :> CLERK = struct 
   datatype vcs = Hg
 
   type path = string
