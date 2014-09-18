@@ -40,6 +40,34 @@ in
                   NONE => OS.Process.exit OS.Process.failure
                 | SOME message => print message
            end
-     | "put"::args => raise Fail "put unimplemented"
+     | "put"::args =>
+         let
+           datatype source = StdIn | Arg of string | File of string
+           val opts = [GetOpt.StrOpt #"m", GetOpt.StrOpt #"f"]
+           fun f (GetOpt.Str (#"m", message), acc) = Arg message
+             | f (GetOpt.Str (#"f", file), acc) = File file
+             | f _ = raise Fail "unexpected error"
+           val (source, args) = GetOpt.getopt opts f StdIn args
+         in
+           if List.length args = 0 then usage ()
+           else
+             let
+               val (file, line) = split #":" (List.hd args)
+               val line = Option.valOf (Int.fromString line)
+               val message =
+                 case source of
+                      StdIn => TextIO.inputAll TextIO.stdIn
+                    | Arg message => message
+                    | File file =>
+                        let
+                          val ins = TextIO.openIn file
+                        in
+                          TextIO.inputAll ins before TextIO.closeIn ins
+                        end
+               val obj = Clerk.new Clerk.Hg (Option.getOpt (repo, "."))
+             in
+               Clerk.put obj file line message
+             end
+         end
      | subcmd::args => raise Fail ("unknown command " ^ subcmd)
 end
