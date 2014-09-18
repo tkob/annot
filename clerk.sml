@@ -1,4 +1,6 @@
 structure Clerk = struct 
+  datatype vcs = Hg
+
   type path = string
   type blame = path * int * string
 
@@ -51,4 +53,7 @@ structure Clerk = struct
   in
     O { store = store, getBlame = getBlame, getCurrentHash = getCurrentHash }
   end
+
+  fun new Hg repo = hg repo
+
 end
