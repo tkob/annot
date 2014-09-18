@@ -7,11 +7,13 @@ structure Clerk :> CLERK = struct
   datatype object = O of {
     store : Store.store,
     getBlame : object -> string -> int -> blame,
+    getAllBlames : object -> string -> blame list,
     getCurrentHash : object -> string
   }
 
   fun getStore (O record) = #store record
   fun getBlame (obj as (O record)) = #getBlame record obj
+  fun getAllBlames (obj as (O record)) = #getAllBlames record obj
   fun getCurrentHash (obj as (O record)) = #getCurrentHash record obj
   
   fun get obj osPath lineNumber =
@@ -33,6 +35,21 @@ structure Clerk :> CLERK = struct
     Store.put store storePath lineNumber hash message
   end
 
+  fun list obj osPath =
+  let
+    val blames = getAllBlames obj osPath
+    val store = getStore obj
+    fun get (file, lineNumber, hash) =
+    let
+      val storePath = Store.stringToPath store osPath
+      val message = Store.get store storePath lineNumber hash
+    in
+      Option.map (fn message => (lineNumber, message)) message
+    end
+  in
+    List.mapPartial get blames
+  end
+
   fun hg repo =
   let
     val store = Store.openStore repo
@@ -44,6 +61,14 @@ structure Clerk :> CLERK = struct
     in
       (#file blame, #lineNumber blame, #changeset blame)
     end
+    fun getAllBlames (O record) osPath =
+    let
+      val blames = Hg.annotate session [osPath]
+      fun adapt blame =
+        (#file blame, #lineNumber blame, #changeset blame)
+    in
+      List.map adapt blames
+    end
     fun getCurrentHash (O record) =
     let
       val { hash = hash, ... } = Hg.tip session
@@ -51,7 +76,10 @@ structure Clerk :> CLERK = struct
       hash
     end
   in
-    O { store = store, getBlame = getBlame, getCurrentHash = getCurrentHash }
+    O { store = store,
+        getBlame = getBlame,
+        getAllBlames = getAllBlames,
+        getCurrentHash = getCurrentHash }
   end
 
   fun new Hg repo = hg repo

@@ -15,6 +15,7 @@ fun usage () = (
   println "  annot put [-m <message>|-f <file>] <file>:<line>";
   println "  annot get <file>:<line>";
   println "  annot get <file>:<start>-<end>";
+  println "  annot list <file>";
   ())
 
 fun main () =
@@ -40,6 +41,29 @@ in
                   NONE => OS.Process.exit OS.Process.failure
                 | SOME message => print message
            end
+     | "list"::args =>
+         if List.length args = 0 then usage ()
+         else
+            let
+              val obj = Clerk.new Clerk.Hg (Option.getOpt (repo, "."))
+              val file = List.hd args
+              val annots = Clerk.list obj file
+              fun show (lineNumber, message) = 
+              let
+                val lines = String.tokens (fn ch => ch = #"\n") message
+                fun showLine line = (
+                print file;
+                print ":";
+                print (Int.toString lineNumber);
+                print ":";
+                print line;
+                print "\n")
+              in
+                List.app showLine lines
+              end
+            in
+              List.app show annots
+            end
      | "put"::args =>
          let
            datatype source = StdIn | Arg of string | File of string
