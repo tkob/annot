@@ -12,9 +12,9 @@ fun usage () = (
   println "usage: annot [-R <path>] <command> [<args>]";
   println "";
   println "subcommands:";
-  println "  annot put file:line message";
-  println "  annot get file:line";
-  println "  annot get file:start-end";
+  println "  annot put [-m <message>|-f <file>] <file>:<line>";
+  println "  annot get <file>:<line>";
+  println "  annot get <file>:<start>-<end>";
   ())
 
 fun main () =
