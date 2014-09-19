@@ -42,12 +42,12 @@ structure Clerk :> CLERK = struct
   let
     val blames = getAllBlames obj osPath
     val store = getStore obj
-    fun get {originalPath = file, originalLineNumber = lineNumber, hash = hash } =
+    fun get {originalPath, originalLineNumber, hash} =
     let
-      val storePath = Store.stringToPath store osPath
-      val message = Store.get store storePath lineNumber hash
+      val storePath = Store.stringToPath store originalPath
+      val message = Store.get store storePath originalLineNumber hash
     in
-      Option.map (fn message => (lineNumber, message)) message
+      Option.map (fn message => (originalLineNumber, message)) message
     end
   in
     List.mapPartial get blames
