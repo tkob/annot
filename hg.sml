@@ -9,6 +9,8 @@ structure Hg :> HG = struct
     greeting : greeting,
     repo : string }
 
+  type path = string
+
   datatype datum = Input of int 
                  | Line of int 
                  | Output of Word8Vector.vector
@@ -23,7 +25,7 @@ structure Hg :> HG = struct
     number : int,
     changeset : string,
     date : Date.date,
-    file : string,
+    file : path,
     lineNumber : int,
     text : string }
 
@@ -326,5 +328,10 @@ structure Hg :> HG = struct
                  Fail ("tip failed with return code " ^ Int.toString ret)
            end
        | _ => raise Fail "unexpected output from server"
+  end
+
+  fun pathToString session path =
+  let val repo = getRepo session in
+    OS.Path.concat (repo, path)
   end
 end

@@ -1,8 +1,7 @@
 structure Clerk :> CLERK = struct 
   datatype vcs = Hg
 
-  type path = string
-  type blame = path * int * string
+  type blame = string * int * string
 
   datatype object = O of {
     store : Store.store,
@@ -59,13 +58,13 @@ structure Clerk :> CLERK = struct
       val blames = Hg.annotate session [osPath]
       val blame = List.nth (blames, lineNumber - 1)
     in
-      (#file blame, #lineNumber blame, #changeset blame)
+      (Hg.pathToString session (#file blame), #lineNumber blame, #changeset blame)
     end
     fun getAllBlames (O record) osPath =
     let
       val blames = Hg.annotate session [osPath]
       fun adapt blame =
-        (#file blame, #lineNumber blame, #changeset blame)
+        (Hg.pathToString session (#file blame), #lineNumber blame, #changeset blame)
     in
       List.map adapt blames
     end

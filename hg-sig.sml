@@ -1,11 +1,12 @@
 signature HG = sig
   type session
+  type path
   type blame = {
     user : string,
     number : int,
     changeset : string,
     date : Date.date,
-    file : string,
+    file : path,
     lineNumber : int,
     text : string }
   type changeset = {
@@ -22,4 +23,5 @@ signature HG = sig
   val getEncoding : session -> string
   val annotate : session -> string list -> blame list
   val tip : session -> changeset
+  val pathToString : session -> path -> string
 end
