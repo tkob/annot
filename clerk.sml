@@ -23,8 +23,8 @@ structure Clerk :> CLERK = struct
   let
     val {originalPath, originalLineNumber, hash} = getBlame obj osPath lineNumber
     val store = getStore obj
-    val storePath = Store.stringToPath store osPath
-    val message = Store.get store storePath lineNumber hash
+    val storePath = Store.stringToPath store originalPath
+    val message = Store.get store storePath originalLineNumber hash
   in
     message
   end
