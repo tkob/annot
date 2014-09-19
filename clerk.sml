@@ -38,19 +38,29 @@ structure Clerk :> CLERK = struct
     Store.put store storePath lineNumber hash message
   end
 
+  fun numberList l start =
+  let
+    fun loop [] n acc = List.rev acc
+      | loop (x::xs) n acc =
+        loop xs (n + 1) ((n, x)::acc)
+  in
+    loop l start []
+  end
+
   fun list obj osPath =
   let
     val blames = getAllBlames obj osPath
+    val numberedBlames = numberList blames 1
     val store = getStore obj
-    fun get {originalPath, originalLineNumber, hash} =
+    fun get (lineNumber, {originalPath, originalLineNumber, hash}) =
     let
       val storePath = Store.stringToPath store originalPath
       val message = Store.get store storePath originalLineNumber hash
     in
-      Option.map (fn message => (originalLineNumber, message)) message
+      Option.map (fn message => (lineNumber, message)) message
     end
   in
-    List.mapPartial get blames
+    List.mapPartial get numberedBlames
   end
 
   fun hg repo =
