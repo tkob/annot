@@ -1,7 +1,11 @@
 structure Clerk :> CLERK = struct 
   datatype vcs = Hg
 
-  type blame = string * int * string
+  type blame = {
+    originalPath : string,
+    originalLineNumber : int,
+    hash : string
+  }
 
   datatype object = O of {
     store : Store.store,
@@ -17,7 +21,7 @@ structure Clerk :> CLERK = struct
   
   fun get obj osPath lineNumber =
   let
-    val (file, lineNumber, hash) = getBlame obj osPath lineNumber
+    val {originalPath, originalLineNumber, hash} = getBlame obj osPath lineNumber
     val store = getStore obj
     val storePath = Store.stringToPath store osPath
     val message = Store.get store storePath lineNumber hash
@@ -38,7 +42,7 @@ structure Clerk :> CLERK = struct
   let
     val blames = getAllBlames obj osPath
     val store = getStore obj
-    fun get (file, lineNumber, hash) =
+    fun get {originalPath = file, originalLineNumber = lineNumber, hash = hash } =
     let
       val storePath = Store.stringToPath store osPath
       val message = Store.get store storePath lineNumber hash
@@ -53,18 +57,22 @@ structure Clerk :> CLERK = struct
   let
     val store = Store.openStore repo
     val session = Hg.openSession repo
-    fun getBlame (O record) osPath lineNumber =
+    fun getBlame (O record) osPath lineNumber : blame =
     let
       val blames = Hg.annotate session [osPath]
       val blame = List.nth (blames, lineNumber - 1)
     in
-      (Hg.pathToString session (#file blame), #lineNumber blame, #changeset blame)
+      { originalPath = Hg.pathToString session (#file blame),
+        originalLineNumber = #lineNumber blame,
+        hash = #changeset blame }
     end
-    fun getAllBlames (O record) osPath =
+    fun getAllBlames (O record) osPath : blame list =
     let
       val blames = Hg.annotate session [osPath]
       fun adapt blame =
-        (Hg.pathToString session (#file blame), #lineNumber blame, #changeset blame)
+        { originalPath = Hg.pathToString session (#file blame),
+          originalLineNumber = #lineNumber blame,
+          hash = #changeset blame }
     in
       List.map adapt blames
     end
