@@ -9,6 +9,7 @@ structure Clerk :> CLERK = struct
 
   datatype object = O of {
     store : Store.store,
+    delete : object -> unit,
     getBlame : object -> string -> int -> blame,
     getAllBlames : object -> string -> blame list,
     getCurrentHash : object -> string
@@ -18,6 +19,8 @@ structure Clerk :> CLERK = struct
   fun getBlame (obj as (O record)) = #getBlame record obj
   fun getAllBlames (obj as (O record)) = #getAllBlames record obj
   fun getCurrentHash (obj as (O record)) = #getCurrentHash record obj
+
+  fun delete (obj as (O record)) = (#delete record) obj
   
   fun get obj osPath lineNumber =
   let
@@ -75,6 +78,8 @@ structure Clerk :> CLERK = struct
                   | NONE => raise Fail "annot project dir not found"
              end
     val session = Hg.openSession (Store.rootDirOf store)
+    fun delete (O object) =
+      (Store.closeStore (#store object); Hg.closeSession session)
     fun getBlame (O record) osPath lineNumber : blame =
     let
       val blames = Hg.annotate session [osPath]
@@ -102,6 +107,7 @@ structure Clerk :> CLERK = struct
     end
   in
     O { store = store,
+        delete = delete,
         getBlame = getBlame,
         getAllBlames = getAllBlames,
         getCurrentHash = getCurrentHash }
