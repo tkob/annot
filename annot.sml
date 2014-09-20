@@ -9,12 +9,11 @@ fun split ch s =
   end
 
 fun usage () = (
-  println "usage: annot [-R <path>] <command> [<args>]";
+  println "usage: annot [-R <path>] [-C <path>] <command> [<args>]";
   println "";
   println "subcommands:";
   println "  annot put [-m <message>|-f <file>] <file>:<line>";
   println "  annot get <file>:<line>";
-  println "  annot get <file>:<start>-<end>";
   println "  annot list <file>";
   ())
 
