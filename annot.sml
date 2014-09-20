@@ -20,10 +20,11 @@ fun usage () = (
 
 fun main () =
 let
-  val opts = [GetOpt.StrOpt #"R"]
+  val opts = [GetOpt.StrOpt #"R", GetOpt.StrOpt #"C"]
   fun f (value, acc) =
     case value of
          GetOpt.Str(#"R", repo) => SOME repo 
+       | GetOpt.Str(#"C", dir) => (OS.FileSys.chDir dir; acc)
        | _ => raise Fail "unexpected error"
   val (repo, args) = GetOpt.getopt opts f NONE (CommandLine.arguments ())
 in
