@@ -35,7 +35,7 @@ in
            let
              val (file, line) = split #":" (List.hd args)
              val line = Option.valOf (Int.fromString line)
-             val obj = Clerk.new Clerk.Hg (Option.getOpt (repo, "."))
+             val obj = Clerk.new Clerk.Hg repo
            in
              case Clerk.get obj file line of
                   NONE => OS.Process.exit OS.Process.failure
@@ -45,7 +45,7 @@ in
          if List.length args = 0 then usage ()
          else
             let
-              val obj = Clerk.new Clerk.Hg (Option.getOpt (repo, "."))
+              val obj = Clerk.new Clerk.Hg repo
               val file = List.hd args
               val annots = Clerk.list obj file
               fun show (lineNumber, message) = 
@@ -88,7 +88,7 @@ in
                         in
                           TextIO.inputAll ins before TextIO.closeIn ins
                         end
-               val obj = Clerk.new Clerk.Hg (Option.getOpt (repo, "."))
+               val obj = Clerk.new Clerk.Hg repo
              in
                Clerk.put obj file line message
              end

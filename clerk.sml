@@ -63,10 +63,18 @@ structure Clerk :> CLERK = struct
     List.mapPartial get numberedBlames
   end
 
-  fun hg repo =
+  fun hg dirOpt =
   let
-    val store = Store.openStore repo
-    val session = Hg.openSession repo
+    val store =
+      case dirOpt of
+           SOME dir => Store.openStore dir
+         | NONE =>
+             let val storeOpt = Store.locateStore "." in
+               case storeOpt of
+                    SOME store => store
+                  | NONE => raise Fail "annot project dir not found"
+             end
+    val session = Hg.openSession (Store.rootDirOf store)
     fun getBlame (O record) osPath lineNumber : blame =
     let
       val blames = Hg.annotate session [osPath]
