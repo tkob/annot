@@ -6,6 +6,8 @@ signature STORE = sig
   val locateStore : string -> store option
   val rootDirOf : store -> string
 
+  val closeStore : store -> unit
+
   val stringToPath : store -> string -> path
 
   val get : store -> path -> int -> string -> string option

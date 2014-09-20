@@ -42,6 +42,8 @@ structure Store :> STORE = struct
   fun rootDirOf (root, _) = root
   fun storeDirOf (_, store) = store
 
+  fun closeStore store = ()
+
   fun stringToPath store osPath =
   let
     val pwd = OS.FileSys.getDir ()
