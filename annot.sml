@@ -29,6 +29,7 @@ fun usage () = (
   println "subcommands:";
   println "  annot put [-m <message>|-f <file>] <file>:<line>";
   println "  annot get <file>:<line>";
+  println "  annot edit <file>:<line>";
   println "  annot list <file>";
   ())
 
@@ -108,5 +109,25 @@ in
                Clerk.put obj file line message
              end
          end
+     | "edit"::args =>
+         if List.length args = 0 then usage ()
+         else
+           let
+             val (file, line) = split #":" (List.hd args)
+             val line = Option.valOf (Int.fromString line)
+             val obj = Clerk.new Clerk.Hg repo
+             val messageBefore = Option.getOpt (Clerk.get obj file line, "")
+             val tmp = OS.FileSys.tmpName ()
+           in
+             toFile (tmp, messageBefore);
+             OS.Process.system ("$EDITOR " ^ tmp);
+             let
+               val messageAfter = fromFile tmp
+             in
+               if messageAfter = messageBefore then ()
+               else Clerk.put obj file line messageAfter;
+               OS.FileSys.remove tmp
+             end
+           end
      | subcmd::args => raise Fail ("unknown command " ^ subcmd)
 end
