@@ -8,6 +8,21 @@ fun split ch s =
     (Substring.string prefix, Substring.string (Substring.triml 1 remainder))
   end
 
+fun fromFile file =
+let
+  val ins = TextIO.openIn file
+in
+  TextIO.inputAll ins before TextIO.closeIn ins
+end
+
+fun toFile (file, text) =
+let
+  val outs = TextIO.openOut file
+in
+  TextIO.output (outs, text);
+  TextIO.closeOut outs
+end
+
 fun usage () = (
   println "usage: annot [-R <path>] [-C <path>] <command> [<args>]";
   println "";
