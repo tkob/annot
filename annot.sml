@@ -27,6 +27,7 @@ fun usage () = (
   println "usage: annot [-R <path>] [-C <path>] <command> [<args>]";
   println "";
   println "subcommands:";
+  println "  annot init";
   println "  annot put [-m <message>|-f <file>] <file>:<line>";
   println "  annot get <file>:<line>";
   println "  annot edit <file>:<line>";
@@ -45,6 +46,13 @@ let
 in
   case args of
        [] => usage ()
+     | "init"::args =>
+         let
+           val rootDir = Option.getOpt (repo, ".")
+           val storeDir = OS.Path.concat (rootDir, ".annot")
+         in
+           OS.FileSys.mkDir storeDir
+         end
      | "get"::args =>
          if List.length args = 0 then usage ()
          else
