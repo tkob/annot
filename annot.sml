@@ -31,7 +31,7 @@ fun usage () = (
   println "  annot put [-m <message>|-f <file>] <file>:<line>";
   println "  annot get <file>:<line>";
   println "  annot edit <file>:<line>";
-  println "  annot list <file>";
+  println "  annot list [-p vim] <file>";
   ())
 
 fun main () =
@@ -66,28 +66,58 @@ in
                 | SOME message => print message
            end
      | "list"::args =>
-         if List.length args = 0 then usage ()
-         else
-            let
-              val obj = Clerk.new Clerk.Hg repo
-              val file = List.hd args
-              val annots = Clerk.list obj file
-              fun show (lineNumber, message) = 
+         let
+           datatype printer = Default | Vim
+           val opts = [GetOpt.StrOpt #"p"]
+           fun f (GetOpt.Str (#"p", "vim"), acc) = Vim
+             | f (GetOpt.Str (#"p", printer), acc) =
+                 raise Fail ("unknown printer " ^ printer)
+             | f _ = raise Fail "unexpected error"
+           val (printer, args) = GetOpt.getopt opts f Default args
+         in
+           if List.length args = 0 then usage ()
+           else
               let
-                val lines = String.tokens (fn ch => ch = #"\n") message
-                fun showLine line = (
-                print file;
-                print ":";
-                print (Int.toString lineNumber);
-                print ":";
-                print line;
-                print "\n")
+                val obj = Clerk.new Clerk.Hg repo
+                val file = List.hd args
+                val annots = Clerk.list obj file
+                fun defaultPrinter annots =
+                let
+                  fun show (lineNumber, message) = 
+                  let
+                    val lines = String.tokens (fn ch => ch = #"\n") message
+                    fun showLine line = (
+                      print file;
+                      print ":";
+                      print (Int.toString lineNumber);
+                      print ":";
+                      print line;
+                      print "\n")
+                  in
+                    List.app showLine lines
+                  end
+                in
+                  List.app show annots
+                end
+                fun vimPrinter annots =
+                let
+                  fun show (lineNumber, message) = 
+                    "[ \""
+                    ^ String.toString file ^ "\", "
+                    ^ Int.toString lineNumber ^ ", \""
+                    ^ String.toString message
+                    ^ "\" ]"
+                in
+                  print "[ ";
+                  print (String.concatWith ", " (List.map show annots));
+                  print " ]"
+                end
               in
-                List.app showLine lines
+                case printer of
+                     Default => defaultPrinter annots
+                   | Vim => vimPrinter annots
               end
-            in
-              List.app show annots
-            end
+         end
      | "put"::args =>
          let
            datatype source = StdIn | Arg of string | File of string
