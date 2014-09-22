@@ -6,6 +6,8 @@ let g:loaded_annot = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
+let s:annots = {}
+
 " parse string as 'filename:lineno:message'
 function s:parseline(line)
         let firstidx = stridx(a:line, ":")
@@ -13,7 +15,33 @@ function s:parseline(line)
         let filename = a:line[0:(firstidx - 1)]
         let lineno = a:line[(firstidx + 1):(secondidx - 1)]
         let message = a:line[(secondidx + 1):]
-        return [filename, lineno, message]
+        return [filename, str2nr(lineno), message]
+endfunction
+
+let s:prevlnum = -1
+let s:prevprinted = 0
+function s:cursormoved()
+        let lnum = line('.')
+        if lnum == s:prevlnum
+                return
+        endif
+        let s:prevlnum = lnum
+
+        let currentfile = expand("%:p")
+        if has_key(s:annots, currentfile)
+                let lines = s:annots[currentfile]
+                if has_key(lines, lnum)
+                        let message = lines[lnum]
+                        let firstline = split(message, "\n")[0]
+                        echo firstline
+                        let s:prevprinted = 1
+                        return
+                endif
+        endif
+        if s:prevprinted
+                echo
+                let s:prevprinted = 0
+        endif
 endfunction
 
 function Annot()
@@ -25,13 +53,23 @@ function Annot()
                 echo 'annot failed.'
                 return
         endif
+
+        augroup annot
+                autocmd!
+                autocmd CursorMoved <buffer> call s:cursormoved()
+        augroup END
+
         lgetexpr list
         lopen
+
+        let lines = {}
         sign define annot text=>> texthl=Search
         for line in list
                 let [filename, lineno, message] = s:parseline(line)
+                let lines[lineno] = message
                 execute ":sign place " . lineno . " line=" . lineno . " name=annot file=" . currentfile
         endfor
+        let s:annots[currentfile] = lines
 endfunction
 
 if !exists(":Annot")
