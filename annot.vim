@@ -22,10 +22,13 @@ function s:cursormoved()
                 let lines = s:annots[currentfile]
                 if has_key(lines, lnum)
                         let message = lines[lnum]
-                        let firstline = split(message, "\n")[0]
-                        echo firstline
-                        let s:prevprinted = 1
-                        return
+                        let messagelines = split(message, "\n")
+                        if len(messagelines) != 0
+                                let firstline = messagelines[0]
+                                echo firstline
+                                let s:prevprinted = 1
+                                return
+                        endif
                 endif
         endif
         if s:prevprinted
