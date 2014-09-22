@@ -21,6 +21,10 @@ function Annot()
         let dir = expand("%:p:h")
         let commandline = "annot -C " . dir .  " list " . currentfile
         let list = split(system(commandline), "\n")
+        if v:shell_error
+                echo 'annot failed.'
+                return
+        endif
         lgetexpr list
         lopen
         sign define annot text=>> texthl=Search
