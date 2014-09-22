@@ -34,11 +34,11 @@ structure Clerk :> CLERK = struct
 
   fun put obj osPath lineNumber message =
   let
-    val hash = getCurrentHash obj
+    val {originalPath, originalLineNumber, hash} = getBlame obj osPath lineNumber
     val store = getStore obj
-    val storePath = Store.stringToPath store osPath
+    val storePath = Store.stringToPath store originalPath
   in
-    Store.put store storePath lineNumber hash message
+    Store.put store storePath originalLineNumber hash message
   end
 
   fun numberList l start =
