@@ -8,16 +8,6 @@ set cpo&vim
 
 let s:annots = {}
 
-" parse string as 'filename:lineno:message'
-function s:parseline(line)
-        let firstidx = stridx(a:line, ":")
-        let secondidx = stridx(a:line, ":", firstidx + 1)
-        let filename = a:line[0:(firstidx - 1)]
-        let lineno = a:line[(firstidx + 1):(secondidx - 1)]
-        let message = a:line[(secondidx + 1):]
-        return [filename, str2nr(lineno), message]
-endfunction
-
 let s:prevlnum = -1
 let s:prevprinted = 0
 function s:cursormoved()
@@ -44,11 +34,20 @@ function s:cursormoved()
         endif
 endfunction
 
+function s:makelocations(lines)
+        let list = []
+        for line in a:lines
+                let [filename, lineno, message] = line
+                call add(list, join(line, ":"))
+        endfor
+        lgetexpr list
+endfunction
+
 function Annot()
         let currentfile = expand("%:p")
         let dir = expand("%:p:h")
-        let commandline = "annot -C " . dir .  " list " . currentfile
-        let list = split(system(commandline), "\n")
+        let commandline = "annot -C " . dir .  " list -p vim " . currentfile
+        let lines = eval(system(commandline))
         if v:shell_error
                 echo 'annot failed.'
                 return
@@ -59,16 +58,16 @@ function Annot()
                 autocmd CursorMoved <buffer> call s:cursormoved()
         augroup END
 
-        lgetexpr list
+        call s:makelocations(lines)
 
-        let lines = {}
+        let lineDict = {}
         sign define annot text=>> texthl=Search
-        for line in list
-                let [filename, lineno, message] = s:parseline(line)
-                let lines[lineno] = message
+        for line in lines
+                let [filename, lineno, message] = line
+                let lineDict[lineno] = message
                 execute ":sign place " . lineno . " line=" . lineno . " name=annot file=" . currentfile
         endfor
-        let s:annots[currentfile] = lines
+        let s:annots[currentfile] = lineDict
 endfunction
 
 if !exists(":Annot")
