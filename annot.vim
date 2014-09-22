@@ -60,7 +60,6 @@ function Annot()
         augroup END
 
         lgetexpr list
-        lopen
 
         let lines = {}
         sign define annot text=>> texthl=Search
