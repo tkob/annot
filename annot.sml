@@ -84,9 +84,9 @@ in
                     ^ String.toString message
                     ^ "\" ]"
                 in
-                  print "[ \n";
-                  print (String.concatWith ",\n" (List.map show annots));
-                  print "\n]\n"
+                  print "[ ";
+                  print (String.concatWith ", " (List.map show annots));
+                  print " ]"
                 end
               in
                 case printer of
