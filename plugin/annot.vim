@@ -8,6 +8,16 @@ set cpo&vim
 
 let s:annots = {}
 
+function s:has_annotation(file, lnum)
+        if has_key(s:annots, a:file)
+                let lines = s:annots[a:file]
+                if has_key(lines, a:lnum)
+                        return 1
+                endif
+        endif
+        return 0
+endfunction
+
 let s:prevlnum = -1
 let s:prevprinted = 0
 function s:cursormoved()
@@ -18,17 +28,14 @@ function s:cursormoved()
         let s:prevlnum = lnum
 
         let currentfile = expand("%:p")
-        if has_key(s:annots, currentfile)
-                let lines = s:annots[currentfile]
-                if has_key(lines, lnum)
-                        let message = lines[lnum]
-                        let messagelines = split(message, "\n")
-                        if len(messagelines) != 0
-                                let firstline = messagelines[0]
-                                echo firstline
-                                let s:prevprinted = 1
-                                return
-                        endif
+        if s:has_annotation(currentfile, lnum)
+                let message = s:annots[currentfile][lnum]
+                let messagelines = split(message, "\n")
+                if len(messagelines) != 0
+                        let firstline = messagelines[0]
+                        echo firstline
+                        let s:prevprinted = 1
+                        return
                 endif
         endif
         if s:prevprinted
