@@ -81,6 +81,17 @@ function Annot()
         let s:annots[currentfile] = lineDict
 endfunction
 
+function AnnotPreview()
+        let currentfile = expand("%:p")
+        let lnum = line('.')
+        if s:has_annotation(currentfile, lnum)
+                let temp = tempname()
+                let message = s:annots[currentfile][lnum]
+                call writefile(split(message, "\n"), temp, 'b')
+                execute ":pedit " . temp
+        endif
+endfunction
+
 if !exists(":Annot")
         command Annot :call Annot()
 endif
