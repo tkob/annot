@@ -50,11 +50,12 @@ function Annot()
         let currentfile = expand("%:p")
         let dir = expand("%:p:h")
         let commandline = "annot -C " . dir .  " list -p vim " . currentfile
-        let lines = eval(system(commandline))
+        let result = system(commandline)
         if v:shell_error
                 echo 'annot failed.'
                 return
         endif
+        let lines = eval(result)
 
         augroup annot
                 autocmd!
