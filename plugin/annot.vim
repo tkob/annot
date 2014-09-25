@@ -96,5 +96,9 @@ if !exists(":Annot")
         command Annot :call Annot()
 endif
 
+if !exists(":AnnotPreview")
+        command AnnotPreview :call AnnotPreview()
+endif
+
 let &cpo = s:save_cpo
 unlet s:save_cpo
