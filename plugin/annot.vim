@@ -7,6 +7,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 let s:annots = {}
+let s:tempname_to_location = {}
 
 function s:has_annotation(file, lnum)
         if has_key(s:annots, a:file)
@@ -81,6 +82,22 @@ function Annot()
         let s:annots[currentfile] = lineDict
 endfunction
 
+function s:writepreview()
+        let tempname = expand("%")
+        if has_key(s:tempname_to_location, tempname)
+                let [filename, lnum] = s:tempname_to_location[tempname]
+                let dir = fnamemodify(filename, ":p:h")
+                echo dir . "\n" . dir
+                let commandline =  "annot -C " . dir . " put -f " . tempname . " " . filename . ":" . lnum
+                let result = system(commandline)
+                if v:shell_error
+                        echo "annot failed.\n" . result
+                        return
+                endif
+                let s:annots[filename][lnum] = join(getbufline(tempname, 1, "$"), "\n")
+        endif
+endfunction
+
 function AnnotPreview()
         let currentfile = expand("%:p")
         let lnum = line('.')
@@ -88,7 +105,12 @@ function AnnotPreview()
                 let temp = tempname()
                 let message = s:annots[currentfile][lnum]
                 call writefile(split(message, "\n"), temp, 'b')
+                let s:tempname_to_location[temp] = [currentfile, lnum]
                 execute ":pedit " . temp
+                augroup annot-preview
+                        autocmd!
+                        execute ':autocmd BufWritePost ' . temp . ' call s:writepreview()'
+                augroup END
         endif
 endfunction
 
