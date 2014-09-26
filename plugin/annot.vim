@@ -82,6 +82,19 @@ function Annot()
         let s:annots[currentfile] = lineDict
 endfunction
 
+function AnnotList()
+        let currentfile = expand("%:p")
+        let dir = expand("%:p:h")
+        let commandline = "annot -C " . dir .  " list " . currentfile
+        let result = system(commandline)
+        if v:shell_error
+                echo "annot failed: " . result
+                return
+        endif
+        cexpr result
+        copen
+endfunction
+
 function s:writepreview()
         let tempname = expand("%")
         if has_key(s:tempname_to_location, tempname)
@@ -116,6 +129,10 @@ endfunction
 
 if !exists(":Annot")
         command Annot :call Annot()
+endif
+
+if !exists(":AnnotList")
+        command AnnotList :call AnnotList()
 endif
 
 if !exists(":AnnotPreview")
