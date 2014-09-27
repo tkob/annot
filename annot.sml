@@ -31,7 +31,7 @@ fun usage () = (
   println "  annot put [-m <message>|-f <file>] <file>:<line>";
   println "  annot get <file>:<line>";
   println "  annot edit <file>:<line>";
-  println "  annot list [-p vim] <file>";
+  println "  annot list [-l] [-p vim] <file>";
   ())
 
 fun main () =
@@ -68,12 +68,14 @@ in
      | "list"::args =>
          let
            datatype printer = Default | Vim
-           val opts = [GetOpt.StrOpt #"p"]
-           fun f (GetOpt.Str (#"p", "vim"), acc) = Vim
+           type opts = bool * printer
+           val opts = [GetOpt.FlagOpt #"l", GetOpt.StrOpt #"p"]
+           fun f (GetOpt.Flag #"l", (_, p)) = (true, p)
+             | f (GetOpt.Str (#"p", "vim"), (l, _)) = (l, Vim)
              | f (GetOpt.Str (#"p", printer), acc) =
                  raise Fail ("unknown printer " ^ printer)
              | f _ = raise Fail "unexpected error"
-           val (printer, args) = GetOpt.getopt opts f Default args
+           val ((long, printer), args) = GetOpt.getopt opts f (false, Default) args
          in
            if List.length args = 0 then usage ()
            else
@@ -94,7 +96,12 @@ in
                       print line;
                       print "\n")
                   in
-                    List.app showLine lines
+                    if long then
+                      List.app showLine lines
+                    else
+                      case lines of
+                           [] => ()
+                         | line::_ => showLine line
                   end
                 in
                   List.app show annots
