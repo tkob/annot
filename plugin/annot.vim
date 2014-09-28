@@ -127,6 +127,22 @@ function AnnotPreview()
         endif
 endfunction
 
+function AnnotAdd(...)
+        let currentfile = expand("%:p")
+        let lnum = line('.')
+        let dir = expand("%:p:h")
+        echo join(a:000, " ")
+        if s:has_annotation(currentfile, lnum)
+        else
+                let commandline =  "annot -C " . dir . " put -m " . a:message . " " . filename . ":" . lnum
+                let result = system(commandline)
+                if v:shell_error
+                        echo "annot failed.\n" . result
+                        return
+                endif
+        endif
+endfunction
+
 if !exists(":Annot")
         command Annot :call Annot()
 endif
@@ -137,6 +153,10 @@ endif
 
 if !exists(":AnnotPreview")
         command AnnotPreview :call AnnotPreview()
+endif
+
+if !exists(":AnnotAdd")
+        command -nargs=* AnnotAdd :call AnnotAdd(<q-args>)
 endif
 
 let &cpo = s:save_cpo
