@@ -127,14 +127,13 @@ function AnnotPreview()
         endif
 endfunction
 
-function AnnotAdd(...)
+function AnnotAdd(message)
         let currentfile = expand("%:p")
         let lnum = line('.')
         let dir = expand("%:p:h")
-        echo join(a:000, " ")
         if s:has_annotation(currentfile, lnum)
         else
-                let commandline =  "annot -C " . dir . " put -m " . a:message . " " . filename . ":" . lnum
+                let commandline =  'annot -C ' . dir . ' put -m ' . shellescape(a:message) . ' ' . currentfile . ':' . lnum
                 let result = system(commandline)
                 if v:shell_error
                         echo "annot failed.\n" . result
