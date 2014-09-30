@@ -139,6 +139,7 @@ function AnnotAdd(message)
                         echo "annot failed.\n" . result
                         return
                 endif
+                call Annot()
         endif
 endfunction
 
